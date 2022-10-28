@@ -11,18 +11,17 @@ import java.util.stream.Collectors;
 
 public class MermaidFormatter {
     public String format(InternalGraphRepresentation graphRepresentation) {
-        return mermaidTypeRepresentation(graphRepresentation.getType().getTypeList()) + mermaidRelationRepresentation(graphRepresentation.getRelation().getRelationsList());
+        return mermaidUmlTypeRepresentation(graphRepresentation.getUmlType().getListOfClass()) + mermaidUmlRelationRepresentation(graphRepresentation.getUmlRelation().getRelationList());
     }
-    private String mermaidTypeRepresentation(Set<Class> classes) {
+    private String mermaidUmlTypeRepresentation(Set<Class> classlist) {
         String mermaidSyntax = "classDiagram\n";
-        for (Class classe : classes) {
-            mermaidSyntax += "class " + classe.getSimpleName();
-            String fieldString = mermaidFieldRepresentation(classe);
-            String methodString = mermaidMethodRepresentation(classe);
-            boolean check = !(fieldString + methodString).equals("") || Modifier.isInterface(classe.getModifiers());
-            if (check) mermaidSyntax +=" {\n";
-            if (Modifier.isInterface(classe.getModifiers())) {
-                mermaidSyntax +="    <<interface>>\n";
+        for (Class classElement : classlist) {
+            mermaidSyntax += "class " + classElement.getSimpleName();
+            String fieldString = mermaidFieldRepresentation(classElement);
+            String methodString = mermaidMethodRepresentation(classElement);
+            boolean check = !(fieldString + methodString).equals("") || Modifier.isInterface(classElement.getModifiers());
+            if (check) mermaidSyntax += " {\n";
+            if (Modifier.isInterface(classElement.getModifiers())) {
                 check = true;
             }
             mermaidSyntax += fieldString;
@@ -32,25 +31,21 @@ public class MermaidFormatter {
         }
         return mermaidSyntax;
     }
-    private String mermaidRelationRepresentation(List<String[]> relations) {
+    private String mermaidUmlRelationRepresentation(List<String[]> relationList) {
         String mermaidSyntax = "";
-        for (String[] relation : relations) {
+        for (String[] relation : relationList) {
             mermaidSyntax += relation[0];
-            if (relation[2].equals("implements")) {
-                mermaidSyntax += " <|.. ";
-            } else if (relation[2].equals("extends")) {
-                mermaidSyntax += " <|-- ";
-            } else {
-                mermaidSyntax += " <-- ";
-                mermaidSyntax += relation[1] + " : " + relation[2];
-                mermaidSyntax += "\n";
-            }
+            if (relation[2].equals("implements")) mermaidSyntax += " <|.. ";
+            else if (relation[2].equals("extends")) mermaidSyntax += " <|-- ";
+            else mermaidSyntax += " <-- ";
+            mermaidSyntax += relation[1] + " : " + relation[2];
+            mermaidSyntax += "\n";
         }
         return mermaidSyntax;
     }
-    private String mermaidFieldRepresentation(Class classe) {
+    private String mermaidFieldRepresentation(Class classElement) {
         String mermaidSyntax = "";
-        for (Field field : classe.getDeclaredFields()) {
+        for (Field field : classElement.getDeclaredFields()) {
             if (!field.isSynthetic()) {
                 mermaidSyntax += "    " + (Modifier.isPrivate(field.getModifiers()) ? "-" : "+");
                 mermaidSyntax += field.getType().getSimpleName() + " " + field.getName();
@@ -59,18 +54,19 @@ public class MermaidFormatter {
         }
         return mermaidSyntax;
     }
-    private String mermaidMethodRepresentation(Class classe) {
+    private String mermaidMethodRepresentation(Class classElement) {
         String mermaidSyntax = "";
-        for (Method method : classe.getDeclaredMethods()) {
+        for (Method method : classElement.getDeclaredMethods()) {
             if (!method.isSynthetic()) {
                 mermaidSyntax += "    " + (Modifier.isPrivate(method.getModifiers()) ? "-" : "+");
                 mermaidSyntax += method.getName() + "(";
-                ArrayList<String> params = new ArrayList<>();
+                ArrayList<String> parameterList = new ArrayList<>();
                 for (Parameter parameter : method.getParameters()) {
-                    params.add(parameter.getType().getSimpleName() + " " + parameter.getName());
+                    parameterList.add(parameter.getType().getSimpleName() + " " + parameter.getName());
                 }
-                mermaidSyntax += params.stream().collect(Collectors.joining(",")) + ")";
-                mermaidSyntax += (Modifier.isStatic(method.getModifiers()) ? "$" : Modifier.isAbstract(method.getModifiers()) ? "*" : "") + " ";
+                mermaidSyntax += parameterList.stream().collect(Collectors.joining(",")) + ")";
+                mermaidSyntax += (Modifier.isStatic(method.getModifiers()) ? "$"
+                    : Modifier.isAbstract(method.getModifiers()) ? "*" : "") + " ";
                 mermaidSyntax += method.getReturnType().getSimpleName() + "\n";
             }
         }

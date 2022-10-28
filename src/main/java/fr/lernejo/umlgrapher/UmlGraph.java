@@ -1,17 +1,20 @@
 package fr.lernejo.umlgrapher;
 public class UmlGraph {
-    private final Class[] classes;
+    private final Class[] classList;
 
-    public UmlGraph(Class[] classes) {
-        this.classes = classes;
+    public UmlGraph(Class[] classList) {
+        this.classList = classList;
     }
 
     public String as(GraphType graphType) {
         String result = "";
 
         if (graphType == GraphType.Mermaid) {
-            InternalGraphRepresentation graph = new InternalGraphRepresentation(this.classes);
-            result = new MermaidFormatter().format(graph);
+            try {
+                result = new MermaidFormatter().format(new InternalGraphRepresentation(this.classList));
+            } catch (RuntimeException exception) {
+                System.out.println("Error: " + exception.getClass() + " - " + exception.getMessage());
+            }
         }
         return result;
     }
