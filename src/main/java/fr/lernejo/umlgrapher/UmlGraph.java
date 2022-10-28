@@ -7,11 +7,12 @@ public class UmlGraph {
     }
 
     public String as(GraphType graphType) {
-        return """
-            classDiagram
-            class Machin {
-                <<interface>>
-            }
-            """;
+        String result = "";
+
+        if (graphType == GraphType.Mermaid) {
+            InternalGraphRepresentation graph = new InternalGraphRepresentation(this.classes);
+            result = new MermaidFormatter().format(graph);
+        }
+        return result;
     }
 }
